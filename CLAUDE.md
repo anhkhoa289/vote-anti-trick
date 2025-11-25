@@ -8,10 +8,12 @@ Infrastructure voting system built with Next.js 16 App Router, PostgreSQL, and P
 
 ## Common Development Commands
 
+**IMPORTANT**: This project uses **yarn** as the package manager, not npm.
+
 ### Setup
 ```bash
 # Install dependencies
-npm install
+yarn install
 
 # Setup database with Docker
 docker-compose up -d
@@ -20,8 +22,8 @@ docker-compose up -d
 cp .env.example .env
 
 # Run migrations and generate Prisma client
-npx prisma migrate dev --name init
-npx prisma generate
+yarn prisma migrate dev --name init
+yarn prisma generate
 
 # Or use the makefile
 make prisma
@@ -30,33 +32,33 @@ make prisma
 ### Development
 ```bash
 # Start dev server (http://localhost:3000)
-npm run dev
+yarn dev
 # or
 make dev
 
 # Run linting
-npm run lint
+yarn lint
 
 # Build for production
-npm run build
+yarn build
 
 # Database GUI (http://localhost:5555)
-npx prisma studio
+yarn prisma studio
 ```
 
 ### Database Management
 ```bash
 # Create migration after schema changes
-npx prisma migrate dev --name <migration_name>
+yarn prisma migrate dev --name <migration_name>
 
 # Generate Prisma client (required after schema changes or fresh install)
-npx prisma generate
+yarn prisma generate
 
 # Reset database (WARNING: deletes all data)
-npx prisma migrate reset
+yarn prisma migrate reset
 
 # Deploy migrations to production
-npx prisma migrate deploy
+yarn prisma migrate deploy
 ```
 
 ## Architecture
@@ -77,9 +79,9 @@ npx prisma migrate deploy
 3. **Client initialization** (`lib/prisma.ts`): Uses the adapter pattern with `@prisma/adapter-pg` and `pg` for PostgreSQL connections
 
 When working with Prisma:
-- Always run `npx prisma generate` after schema changes or fresh install
+- Always run `yarn prisma generate` after schema changes or fresh install
 - The client is initialized with a database adapter, not a connection URL
-- Required packages: `@prisma/client`, `@prisma/adapter-pg`, `pg`, `@types/pg`
+- Required packages: `@prisma/client`, `@prisma/adapter-pg`, `pg`, `@types/pg`, `dotenv`
 
 ### Directory Structure
 - `app/` - Next.js App Router pages and API routes
@@ -135,24 +137,24 @@ Docker Compose provides PostgreSQL on port 6543 (not the default 5432) to avoid 
 
 When adding features:
 1. Update `prisma/schema.prisma` if database changes needed
-2. Run `npx prisma migrate dev --name <descriptive_name>`
-3. Run `npx prisma generate` to update TypeScript types
+2. Run `yarn prisma migrate dev --name <descriptive_name>`
+3. Run `yarn prisma generate` to update TypeScript types
 4. Update types in `types/index.ts` if needed
 5. Implement API routes in `app/api/`
 6. Update components in `components/`
-7. Test with `npm run dev`
+7. Test with `yarn dev`
 
 When modifying the database schema:
 - Always create migrations (don't use `prisma db push` in production)
 - Migration files stored in `prisma/migrations/`
-- Run `npx prisma generate` after migrations to update client and types
+- Run `yarn prisma generate` after migrations to update client and types
 
 ## Troubleshooting
 
 ### "Prisma Client not initialized" Error
 This occurs when Prisma client hasn't been generated after installation or schema changes:
 ```bash
-npx prisma generate
+yarn prisma generate
 ```
 
 ### Database Connection Errors
@@ -163,12 +165,12 @@ npx prisma generate
 ### TypeScript Errors After Schema Changes
 Regenerate Prisma client to update TypeScript types:
 ```bash
-npx prisma generate
+yarn prisma generate
 ```
 
 ### Migration Conflicts
 If migrations are out of sync:
 ```bash
-npx prisma migrate reset  # WARNING: deletes all data
-npx prisma migrate dev
+yarn prisma migrate reset  # WARNING: deletes all data
+yarn prisma migrate dev
 ```
