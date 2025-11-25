@@ -16,6 +16,10 @@ jobs:
   lint-and-typecheck:
     name: ESLint & TypeScript Check
     runs-on: ubuntu-latest
+    env:
+      # Use a dummy DATABASE_URL for build-time checks
+      # The build process doesn't need a real database connection
+      DATABASE_URL: postgresql://user:pass@localhost:5432/dbname
 
     steps:
       - name: Checkout code
@@ -41,7 +45,3 @@ jobs:
 
       - name: Build project
         run: yarn build
-        env:
-          # Use a dummy DATABASE_URL for build-time checks
-          # The build process doesn't need a real database connection
-          DATABASE_URL: postgresql://user:pass@localhost:5432/dbname
