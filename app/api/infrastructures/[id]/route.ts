@@ -4,11 +4,12 @@ import { prisma } from '@/lib/prisma'
 // GET /api/infrastructures/[id] - Get a specific infrastructure
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const infrastructure = await prisma.infrastructure.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         _count: {
           select: { votes: true }

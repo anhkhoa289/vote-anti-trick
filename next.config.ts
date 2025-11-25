@@ -19,6 +19,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  experimental: {
+    // Enable system TLS certs for font loading
+    turbopackUseSystemTlsCerts: true,
+  },
 };
 
 export default nextConfig;
