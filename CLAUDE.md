@@ -25,8 +25,9 @@ cp .env.example .env
 yarn prisma migrate dev --name init
 yarn prisma generate
 
-# Or use the makefile
-make prisma
+# Or use the makefile shortcuts
+make prisma-generate  # Generate Prisma client
+make prisma-migrate   # Run migrations with --name init
 ```
 
 ### Development
@@ -72,15 +73,23 @@ yarn prisma migrate deploy
 
 ### Prisma 7 Configuration
 
-**CRITICAL**: This project uses Prisma 7, which has a different configuration pattern than Prisma 5:
+**CRITICAL**: This project uses Prisma 7 with a custom client generation setup:
 
-1. **Schema file** (`prisma/schema.prisma`): The datasource block does NOT contain a `url` property
+1. **Schema file** (`prisma/schema.prisma`):
+   - Generator provider: `"prisma-client"` (Prisma 7 style, not `"prisma-client-js"`)
+   - Generator output: `prisma/generated` (custom location, not `node_modules`)
+   - The datasource block does NOT contain a `url` property
 2. **Config file** (`prisma.config.ts` at project root): Defines `datasourceUrl` from environment variables
-3. **Client initialization** (`lib/prisma.ts`): Uses the adapter pattern with `@prisma/adapter-pg` and `pg` for PostgreSQL connections
+3. **Client initialization** (`lib/prisma.ts`):
+   - Imports from `../prisma/generated/client` (not `@prisma/client`)
+   - Uses the `@prisma/adapter-pg` adapter pattern with connection string from environment
+   - Simplified singleton pattern using global variable
 
 When working with Prisma:
 - Always run `yarn prisma generate` after schema changes or fresh install
-- The client is initialized with a database adapter, not a connection URL
+- The generated client is located at `prisma/generated/`, not in `node_modules`
+- Import Prisma client from `../prisma/generated/client`, not `@prisma/client`
+- The client is initialized with a database adapter using `PrismaPg`
 - Required packages: `@prisma/client`, `@prisma/adapter-pg`, `pg`, `@types/pg`, `dotenv`
 
 ### Directory Structure
@@ -88,9 +97,13 @@ When working with Prisma:
   - `app/api/infrastructures/` - REST API for infrastructures and votes
 - `components/` - React client components (all use 'use client')
 - `lib/prisma.ts` - Prisma client singleton (prevents hot reload issues)
-- `prisma/` - Database schema and migrations
+- `prisma/` - Database schema, migrations, and generated client
+  - `prisma/generated/` - Generated Prisma client (custom output location)
+  - `prisma/migrations/` - Database migration files
+  - `prisma/schema.prisma` - Database schema definition
 - `prisma.config.ts` - Prisma 7 datasource configuration
 - `types/` - TypeScript type definitions
+- `makefile` - Development shortcuts for common commands
 
 ### Data Model
 Two entities with one-to-many relationship:
@@ -117,7 +130,12 @@ All routes use try-catch with appropriate HTTP status codes.
 ## Key Implementation Details
 
 ### Prisma Client Singleton
-`lib/prisma.ts` implements singleton pattern to prevent multiple instances during hot reload. Always import from `@/lib/prisma`, never create new `PrismaClient()` instances elsewhere.
+`lib/prisma.ts` implements singleton pattern to prevent multiple instances during hot reload. The client:
+- Imports from `../prisma/generated/client` (custom output location)
+- Uses `PrismaPg` adapter with connection string from `DATABASE_URL`
+- Stores instance in global object to survive hot reloads in development
+
+Always import from `@/lib/prisma`, never create new `PrismaClient()` instances elsewhere.
 
 ### IP Address Tracking
 Vote routes capture IP using waterfall: `x-forwarded-for` → `x-real-ip` → 'unknown'. Implemented in `app/api/infrastructures/[id]/vote/route.ts`.
@@ -156,6 +174,14 @@ This occurs when Prisma client hasn't been generated after installation or schem
 ```bash
 yarn prisma generate
 ```
+The client will be generated to `prisma/generated/` (not `node_modules/@prisma/client`).
+
+### "Module not found" for Prisma Client
+If you see import errors for `@prisma/client`:
+- This project uses a custom output location: `prisma/generated/`
+- Always import from `../prisma/generated/client` (relative path), never from `@prisma/client`
+- Check that `prisma/schema.prisma` has `output = "generated"` in the generator block
+- Verify the import path matches the file's location relative to `prisma/generated/`
 
 ### Database Connection Errors
 1. Verify Docker container is running: `docker-compose ps`
