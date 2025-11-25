@@ -1,35 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withObservability, measureTime } from '@/lib/middleware'
+import { NotFoundError } from '@/lib/errors'
+import logger from '@/lib/logger'
 
 // GET /api/infrastructures/[id] - Get a specific infrastructure
-export async function GET(
+async function getInfrastructure(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const { id } = await params
-    const infrastructure = await prisma.infrastructure.findUnique({
-      where: { id },
-      include: {
-        _count: {
-          select: { votes: true }
+  const { id } = await params
+
+  const infrastructure = await measureTime(
+    async () => {
+      return prisma.infrastructure.findUnique({
+        where: { id },
+        include: {
+          _count: {
+            select: { votes: true }
+          }
         }
-      }
-    })
+      })
+    },
+    'prisma.infrastructure.findUnique',
+    { infrastructureId: id }
+  )
 
-    if (!infrastructure) {
-      return NextResponse.json(
-        { error: 'Infrastructure not found' },
-        { status: 404 }
-      )
-    }
-
-    return NextResponse.json(infrastructure)
-  } catch (error) {
-    console.error('Error fetching infrastructure:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch infrastructure' },
-      { status: 500 }
-    )
+  if (!infrastructure) {
+    throw new NotFoundError('Infrastructure not found', { infrastructureId: id })
   }
+
+  logger.info({ infrastructureId: id, name: infrastructure.name }, 'Fetched infrastructure')
+  return NextResponse.json(infrastructure)
 }
+
+export const GET = withObservability(getInfrastructure, 'GET /api/infrastructures/[id]')
