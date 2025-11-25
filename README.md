@@ -15,15 +15,15 @@ Hệ thống voting cho các infrastructure ấn tượng, được xây dựng 
 
 - **Frontend & Backend**: Next.js 16 (App Router)
 - **Database**: PostgreSQL
-- **ORM**: Prisma
-- **Styling**: Tailwind CSS
+- **ORM**: Prisma 7 (with adapter pattern)
+- **Styling**: Tailwind CSS 4
 - **Language**: TypeScript
 
 ## 📋 Yêu cầu
 
 - Node.js 18+ hoặc 20+
-- PostgreSQL 14+ (đã cài đặt và đang chạy)
-- npm hoặc yarn
+- Docker & Docker Compose (cho PostgreSQL)
+- yarn (package manager)
 
 ## 🚀 Cài đặt
 
@@ -37,59 +37,54 @@ cd vote-anti-trick
 ### 2. Cài đặt dependencies
 
 ```bash
-npm install
+yarn install
 ```
 
 ### 3. Thiết lập database
 
-Tạo database PostgreSQL:
+Khởi động PostgreSQL với Docker:
 
 ```bash
-createdb vote_infrastructure
+docker-compose up -d
 ```
 
-Hoặc sử dụng psql:
-
-```sql
-CREATE DATABASE vote_infrastructure;
-```
+Database sẽ chạy trên port **6543** (không phải 5432).
 
 ### 4. Cấu hình môi trường
 
-Sao chép file `.env.example` thành `.env`:
+Sao chép file `.env.example` thành `.env` (nếu chưa có):
 
 ```bash
 cp .env.example .env
 ```
 
-Cập nhật connection string trong `.env`:
+File `.env` mặc định:
 
 ```env
-DATABASE_URL="postgresql://username:password@localhost:5432/vote_infrastructure?schema=public"
+DATABASE_URL="postgresql://vote:vote123@localhost:6543/vote_infrastructure?schema=public"
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
 ```
 
-Thay `username` và `password` bằng thông tin PostgreSQL của bạn.
-
-### 5. Chạy migrations
+### 5. Chạy migrations và generate Prisma Client
 
 ```bash
-npx prisma migrate dev --name init
+yarn prisma migrate dev --name init
+yarn prisma generate
 ```
 
-### 6. Generate Prisma Client
+Hoặc sử dụng makefile shortcuts:
 
 ```bash
-npx prisma generate
+make prisma-migrate
+make prisma-generate
 ```
 
-### 7. (Tùy chọn) Seed dữ liệu mẫu
-
-Bạn có thể tạo file `prisma/seed.ts` để thêm dữ liệu mẫu.
-
-### 8. Chạy development server
+### 6. Chạy development server
 
 ```bash
-npm run dev
+yarn dev
+# hoặc
+make dev
 ```
 
 Mở [http://localhost:3000](http://localhost:3000) để xem ứng dụng.
@@ -115,9 +110,13 @@ vote-anti-trick/
 ├── lib/
 │   └── prisma.ts                     # Prisma client singleton
 ├── prisma/
-│   └── schema.prisma                 # Database schema
+│   ├── schema.prisma                 # Database schema
+│   ├── migrations/                   # Database migrations
+│   └── generated/                    # Generated Prisma client
 ├── types/
 │   └── index.ts                      # TypeScript types
+├── prisma.config.ts                  # Prisma 7 datasource config
+├── makefile                          # Development shortcuts
 └── .env                              # Environment variables (not in git)
 ```
 
@@ -194,42 +193,50 @@ Chỉnh sửa Tailwind classes trong các component ở thư mục `components/`
 
 ### Thêm fields mới
 1. Cập nhật `prisma/schema.prisma`
-2. Chạy `npx prisma migrate dev --name your_migration_name`
-3. Cập nhật TypeScript types trong `types/index.ts`
-4. Cập nhật API routes và components
+2. Chạy `yarn prisma migrate dev --name your_migration_name`
+3. Chạy `yarn prisma generate` để cập nhật client
+4. Cập nhật TypeScript types trong `types/index.ts`
+5. Cập nhật API routes và components
 
 ## 🔍 Prisma Studio
 
 Để xem và chỉnh sửa database trực quan:
 
 ```bash
-npx prisma studio
+yarn prisma studio
 ```
 
 Mở [http://localhost:5555](http://localhost:5555)
 
 ## 📝 Scripts
 
-- `npm run dev` - Chạy development server
-- `npm run build` - Build production
-- `npm start` - Chạy production server
-- `npx prisma studio` - Mở Prisma Studio
-- `npx prisma migrate dev` - Tạo và chạy migration mới
-- `npx prisma generate` - Generate Prisma Client
+- `yarn dev` / `make dev` - Chạy development server
+- `yarn build` - Build production
+- `yarn start` - Chạy production server
+- `yarn lint` - Chạy linting
+- `yarn prisma studio` - Mở Prisma Studio
+- `yarn prisma migrate dev` - Tạo và chạy migration mới
+- `yarn prisma generate` / `make prisma-generate` - Generate Prisma Client
+- `docker-compose up -d` - Khởi động PostgreSQL
 
 ## 🐛 Troubleshooting
 
 ### Lỗi kết nối database
-- Kiểm tra PostgreSQL đang chạy: `pg_isready`
-- Kiểm tra connection string trong `.env`
-- Kiểm tra database đã được tạo
+- Kiểm tra Docker container đang chạy: `docker-compose ps`
+- Kiểm tra connection string trong `.env` (phải dùng port 6543)
+- Khởi động lại database: `docker-compose restart`
 
-### Lỗi Prisma Client
-- Chạy `npx prisma generate` để tạo lại client
-- Xóa `node_modules` và chạy `npm install` lại
+### Lỗi "Prisma Client not initialized"
+- Chạy `yarn prisma generate` để tạo lại client
+- Client được generate vào thư mục `prisma/generated/`, không phải `node_modules`
 
-### Lỗi TypeScript
-- Kiểm tra tất cả dependencies đã được cài đặt
+### Lỗi "Module not found" cho Prisma Client
+- Project này dùng custom output location: `prisma/generated/`
+- Import từ `../prisma/generated/client`, không phải `@prisma/client`
+- Chạy `yarn prisma generate` nếu thư mục chưa tồn tại
+
+### Lỗi TypeScript sau khi thay đổi schema
+- Chạy `yarn prisma generate` để cập nhật types
 - Restart TypeScript server trong editor
 
 ## 📄 License
