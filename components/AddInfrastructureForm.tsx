@@ -45,7 +45,7 @@ export default function AddInfrastructureForm({ onSuccess }: AddInfrastructureFo
       } else {
         setError('Có lỗi xảy ra khi thêm infrastructure')
       }
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error adding infrastructure', error)
       setError('Có lỗi xảy ra khi thêm infrastructure')
     } finally {

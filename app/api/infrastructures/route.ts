@@ -12,7 +12,7 @@ export async function GET() {
     })
 
     return createSuccessResponse(infrastructures)
-  } catch (error) {
+  } catch (error: unknown) {
     return createErrorResponse({
       message: 'Failed to fetch infrastructures',
       status: 500,
@@ -25,9 +25,17 @@ export async function GET() {
 // POST /api/infrastructures - Create a new infrastructure
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json() as Record<string, unknown>
+    const body = await request.json()
 
-    const validationError = validateRequiredFields(body, ['name', 'description'])
+    // Validate body is an object
+    if (!body || typeof body !== 'object') {
+      return createErrorResponse({
+        message: 'Invalid request body',
+        status: 400
+      })
+    }
+
+    const validationError = validateRequiredFields(body as Record<string, unknown>, ['name', 'description'])
     if (validationError) {
       return createErrorResponse({
         message: validationError,
@@ -46,7 +54,7 @@ export async function POST(request: NextRequest) {
     })
 
     return createSuccessResponse(infrastructure, 201)
-  } catch (error) {
+  } catch (error: unknown) {
     return createErrorResponse({
       message: 'Failed to create infrastructure',
       status: 500,

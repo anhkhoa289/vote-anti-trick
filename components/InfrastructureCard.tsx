@@ -42,7 +42,7 @@ export default function InfrastructureCard({
         onVoteSuccess()
         setTimeout(() => setVoted(false), 3000)
       }
-    } catch (error) {
+    } catch (error: unknown) {
       logger.error('Error voting', error)
     } finally {
       setVoting(false)

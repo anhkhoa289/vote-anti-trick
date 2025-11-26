@@ -9,8 +9,17 @@ export async function POST(
 ) {
   try {
     const { id } = await params
-    const body = await request.json() as Record<string, unknown>
-    const { voterName, voterEmail } = body
+    const body = await request.json()
+
+    // Validate body is an object
+    if (!body || typeof body !== 'object') {
+      return createErrorResponse({
+        message: 'Invalid request body',
+        status: 400
+      })
+    }
+
+    const { voterName, voterEmail } = body as { voterName?: unknown; voterEmail?: unknown }
 
     // Get IP address from request
     const ipAddress = getIpAddress(request.headers)
@@ -46,7 +55,7 @@ export async function POST(
       vote,
       totalVotes: voteCount
     }, 201)
-  } catch (error) {
+  } catch (error: unknown) {
     return createErrorResponse({
       message: 'Failed to create vote',
       status: 500,
