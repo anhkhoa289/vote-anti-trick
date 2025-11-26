@@ -12,9 +12,9 @@ describe('logger', () => {
     jest.useFakeTimers()
     jest.setSystemTime(new Date('2024-01-01T12:00:00.000Z'))
 
-    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation()
-    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation()
-    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
+    consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
+    consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
+    consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
   })
 
   afterEach(() => {
