@@ -4,9 +4,13 @@ on:
   push:
     branches:
       - main
+      - develop
+      - 'release/**'
+      - 'hotfix/**'
   pull_request:
     branches:
       - main
+      - develop
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -63,3 +67,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          # Additional arguments for branch analysis
+          args: >
+            -Dsonar.verbose=true
