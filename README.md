@@ -210,14 +210,34 @@ Mở [http://localhost:5555](http://localhost:5555)
 
 ## 📝 Scripts
 
+### Development
 - `yarn dev` / `make dev` - Chạy development server
 - `yarn build` - Build production
 - `yarn start` - Chạy production server
 - `yarn lint` - Chạy linting
+
+### Database
 - `yarn prisma studio` - Mở Prisma Studio
 - `yarn prisma migrate dev` - Tạo và chạy migration mới
 - `yarn prisma generate` / `make prisma-generate` - Generate Prisma Client
 - `docker-compose up -d` - Khởi động PostgreSQL
+
+### Testing
+- `yarn test` - Chạy unit tests
+- `yarn test:watch` - Chạy tests trong watch mode
+- `yarn test:coverage` - Chạy tests với coverage report
+
+## 🧪 Testing & Quality
+
+Project có comprehensive unit tests với 100% coverage cho backend API routes.
+
+- **25 tests** covering tất cả API endpoints
+- **100% coverage** (branches, functions, lines, statements)
+- **SonarQube integration** sẵn sàng
+
+Xem chi tiết:
+- **[Testing Guide](docs/TESTING.md)** - Hướng dẫn chạy tests và xem coverage
+- **[SonarQube Setup](docs/SONARQUBE.md)** - Tích hợp với SonarQube/SonarCloud
 
 ## 🐛 Troubleshooting
 
