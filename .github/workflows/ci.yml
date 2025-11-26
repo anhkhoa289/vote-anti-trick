@@ -4,31 +4,30 @@ on:
   push:
     branches:
       - main
+      - develop
+      - 'claude/**'
   pull_request:
-    branches:
-      - main
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+    types: [opened, synchronize, reopened]
 
 jobs:
-  lint-and-typecheck:
-    name: ESLint & TypeScript Check
+  test:
+    name: Run Tests
     runs-on: ubuntu-latest
-    env:
-      # Use a dummy DATABASE_URL for build-time checks
-      # The build process doesn't need a real database connection
-      DATABASE_URL: postgresql://user:pass@localhost:5432/dbname
+
+    strategy:
+      matrix:
+        node-version: [20.x]
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Setup Node.js
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ matrix.node-version }}
           cache: 'yarn'
 
       - name: Install dependencies
@@ -37,11 +36,81 @@ jobs:
       - name: Generate Prisma Client
         run: yarn prisma generate
 
-      - name: Run ESLint
-        run: yarn lint
-
-      - name: Run TypeScript type check
+      - name: Run type check
         run: yarn type-check
 
-      - name: Build project
+      - name: Run linter
+        run: yarn lint
+
+      - name: Run tests with coverage
+        run: yarn test:coverage
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: |
+            coverage/
+            test-report.xml
+          retention-days: 30
+
+      - name: Comment coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            try {
+              const lcov = fs.readFileSync('coverage/lcov.info', 'utf8');
+              const lines = lcov.match(/LF:\d+/g);
+              const found = lcov.match(/LH:\d+/g);
+
+              if (lines && found) {
+                const total = lines.reduce((sum, line) => sum + parseInt(line.split(':')[1]), 0);
+                const covered = found.reduce((sum, line) => sum + parseInt(line.split(':')[1]), 0);
+                const percentage = ((covered / total) * 100).toFixed(2);
+
+                github.rest.issues.createComment({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: `## 📊 Test Coverage Report\n\n✅ All tests passed!\n\n**Coverage**: ${percentage}% (${covered}/${total} lines)`
+                });
+              }
+            } catch (error) {
+              console.log('Could not read coverage file:', error.message);
+            }
+
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Generate Prisma Client
+        run: yarn prisma generate
+
+      - name: Build application
         run: yarn build
+
+      - name: Check build output
+        run: |
+          if [ -d ".next" ]; then
+            echo "✅ Build successful - .next directory created"
+            ls -la .next/
+          else
+            echo "❌ Build failed - .next directory not found"
+            exit 1
+          fi
