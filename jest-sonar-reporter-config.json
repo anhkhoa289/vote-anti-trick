@@ -1,0 +1,5 @@
+{
+  "outputDirectory": ".",
+  "outputName": "test-report.xml",
+  "relativePaths": true
+}

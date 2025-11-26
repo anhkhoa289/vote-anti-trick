@@ -41,6 +41,23 @@ const config: Config = {
     '!**/.next/**',
   ],
 
+  // Coverage reporters for SonarQube
+  coverageReporters: ['text', 'lcov', 'json', 'html'],
+  coverageDirectory: 'coverage',
+
+  // Test results reporter for SonarQube
+  testResultsProcessor: 'jest-sonar-reporter',
+
+  // Coverage thresholds
+  coverageThreshold: {
+    global: {
+      branches: 80,
+      functions: 80,
+      lines: 80,
+      statements: 80,
+    },
+  },
+
   // Clear mocks between tests
   clearMocks: true,
   resetMocks: true,
