@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Infrastructure } from '@/types'
 import Image from 'next/image'
+import { logger } from '@/lib/logger'
 
 interface InfrastructureCardProps {
   infrastructure: Infrastructure
@@ -42,7 +43,7 @@ export default function InfrastructureCard({
         setTimeout(() => setVoted(false), 3000)
       }
     } catch (error) {
-      console.error('Error voting:', error)
+      logger.error('Error voting', error)
     } finally {
       setVoting(false)
     }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { logger } from '@/lib/logger'
 
 interface AddInfrastructureFormProps {
   onSuccess: () => void
@@ -45,7 +46,7 @@ export default function AddInfrastructureForm({ onSuccess }: AddInfrastructureFo
         setError('Có lỗi xảy ra khi thêm infrastructure')
       }
     } catch (error) {
-      console.error('Error adding infrastructure:', error)
+      logger.error('Error adding infrastructure', error)
       setError('Có lỗi xảy ra khi thêm infrastructure')
     } finally {
       setSubmitting(false)

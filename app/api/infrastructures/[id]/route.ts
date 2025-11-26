@@ -1,5 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse, createSuccessResponse } from '@/lib/api-utils'
+import { includeVoteCount } from '@/lib/prisma-queries'
 
 // GET /api/infrastructures/[id] - Get a specific infrastructure
 export async function GET(
@@ -10,26 +12,23 @@ export async function GET(
     const { id } = await params
     const infrastructure = await prisma.infrastructure.findUnique({
       where: { id },
-      include: {
-        _count: {
-          select: { votes: true }
-        }
-      }
+      include: includeVoteCount
     })
 
     if (!infrastructure) {
-      return NextResponse.json(
-        { error: 'Infrastructure not found' },
-        { status: 404 }
-      )
+      return createErrorResponse({
+        message: 'Infrastructure not found',
+        status: 404
+      })
     }
 
-    return NextResponse.json(infrastructure)
+    return createSuccessResponse(infrastructure)
   } catch (error) {
-    console.error('Error fetching infrastructure:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch infrastructure' },
-      { status: 500 }
-    )
+    return createErrorResponse({
+      message: 'Failed to fetch infrastructure',
+      status: 500,
+      logMessage: 'Error fetching infrastructure',
+      error
+    })
   }
 }

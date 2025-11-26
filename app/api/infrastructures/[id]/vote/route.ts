@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { createErrorResponse, createSuccessResponse, getIpAddress } from '@/lib/api-utils'
 
 // POST /api/infrastructures/[id]/vote - Vote for an infrastructure
 export async function POST(
@@ -8,13 +9,11 @@ export async function POST(
 ) {
   try {
     const { id } = await params
-    const body = await request.json()
+    const body = await request.json() as Record<string, unknown>
     const { voterName, voterEmail } = body
 
     // Get IP address from request
-    const ipAddress = request.headers.get('x-forwarded-for') ||
-                      request.headers.get('x-real-ip') ||
-                      'unknown'
+    const ipAddress = getIpAddress(request.headers)
 
     // Check if infrastructure exists
     const infrastructure = await prisma.infrastructure.findUnique({
@@ -22,18 +21,18 @@ export async function POST(
     })
 
     if (!infrastructure) {
-      return NextResponse.json(
-        { error: 'Infrastructure not found' },
-        { status: 404 }
-      )
+      return createErrorResponse({
+        message: 'Infrastructure not found',
+        status: 404
+      })
     }
 
     // Create the vote
     const vote = await prisma.vote.create({
       data: {
         infrastructureId: id,
-        voterName: voterName || null,
-        voterEmail: voterEmail || null,
+        voterName: voterName ? String(voterName) : null,
+        voterEmail: voterEmail ? String(voterEmail) : null,
         ipAddress
       }
     })
@@ -43,15 +42,16 @@ export async function POST(
       where: { infrastructureId: id }
     })
 
-    return NextResponse.json({
+    return createSuccessResponse({
       vote,
       totalVotes: voteCount
-    }, { status: 201 })
+    }, 201)
   } catch (error) {
-    console.error('Error creating vote:', error)
-    return NextResponse.json(
-      { error: 'Failed to create vote' },
-      { status: 500 }
-    )
+    return createErrorResponse({
+      message: 'Failed to create vote',
+      status: 500,
+      logMessage: 'Error creating vote',
+      error
+    })
   }
 }
