@@ -1,4 +1,4 @@
-import { POST } from '../route'
+import { POST } from '@/app/api/infrastructures/[id]/vote/route'
 import { NextRequest } from 'next/server'
 
 // Mock the Prisma client

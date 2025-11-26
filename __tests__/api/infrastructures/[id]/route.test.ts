@@ -1,4 +1,4 @@
-import { GET } from '../route'
+import { GET } from '@/app/api/infrastructures/[id]/route'
 import { NextRequest } from 'next/server'
 
 // Mock the Prisma client
