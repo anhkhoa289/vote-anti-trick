@@ -23,6 +23,17 @@ const nextConfig: NextConfig = {
     // Enable system TLS certs for font loading
     turbopackUseSystemTlsCerts: true,
   },
+  // Configure server components external packages
+  serverExternalPackages: [
+    'pino',
+    'pino-pretty',
+    '@opentelemetry/api',
+    '@opentelemetry/sdk-node',
+    '@opentelemetry/auto-instrumentations-node',
+    '@opentelemetry/exporter-trace-otlp-http',
+    '@opentelemetry/resources',
+    '@opentelemetry/semantic-conventions',
+  ],
 };
 
 export default nextConfig;

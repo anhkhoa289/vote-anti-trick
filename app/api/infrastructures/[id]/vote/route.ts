@@ -1,57 +1,74 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { withObservability, measureTime, getClientIp } from '@/lib/middleware'
+import { NotFoundError } from '@/lib/errors'
+import logger from '@/lib/logger'
 
 // POST /api/infrastructures/[id]/vote - Vote for an infrastructure
-export async function POST(
+async function createVote(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    const { id } = await params
-    const body = await request.json()
-    const { voterName, voterEmail } = body
+  const { id } = await params
+  const body = await request.json()
+  const { voterName, voterEmail } = body
 
-    // Get IP address from request
-    const ipAddress = request.headers.get('x-forwarded-for') ||
-                      request.headers.get('x-real-ip') ||
-                      'unknown'
+  // Get IP address from request
+  const ipAddress = getClientIp(request)
 
-    // Check if infrastructure exists
-    const infrastructure = await prisma.infrastructure.findUnique({
-      where: { id }
-    })
+  // Check if infrastructure exists
+  const infrastructure = await measureTime(
+    async () => prisma.infrastructure.findUnique({ where: { id } }),
+    'prisma.infrastructure.findUnique',
+    { infrastructureId: id }
+  )
 
-    if (!infrastructure) {
-      return NextResponse.json(
-        { error: 'Infrastructure not found' },
-        { status: 404 }
-      )
-    }
+  if (!infrastructure) {
+    throw new NotFoundError('Infrastructure not found', { infrastructureId: id })
+  }
 
-    // Create the vote
-    const vote = await prisma.vote.create({
-      data: {
-        infrastructureId: id,
-        voterName: voterName || null,
-        voterEmail: voterEmail || null,
-        ipAddress
-      }
-    })
+  // Create the vote
+  const vote = await measureTime(
+    async () => {
+      return prisma.vote.create({
+        data: {
+          infrastructureId: id,
+          voterName: voterName || null,
+          voterEmail: voterEmail || null,
+          ipAddress
+        }
+      })
+    },
+    'prisma.vote.create',
+    { infrastructureId: id, voterName, ipAddress }
+  )
 
-    // Get updated vote count
-    const voteCount = await prisma.vote.count({
-      where: { infrastructureId: id }
-    })
+  // Get updated vote count
+  const voteCount = await measureTime(
+    async () => prisma.vote.count({ where: { infrastructureId: id } }),
+    'prisma.vote.count',
+    { infrastructureId: id }
+  )
 
-    return NextResponse.json({
+  logger.info(
+    {
+      voteId: vote.id,
+      infrastructureId: id,
+      infrastructureName: infrastructure.name,
+      voterName,
+      ipAddress,
+      totalVotes: voteCount
+    },
+    'Vote created successfully'
+  )
+
+  return NextResponse.json(
+    {
       vote,
       totalVotes: voteCount
-    }, { status: 201 })
-  } catch (error) {
-    console.error('Error creating vote:', error)
-    return NextResponse.json(
-      { error: 'Failed to create vote' },
-      { status: 500 }
-    )
-  }
+    },
+    { status: 201 }
+  )
 }
+
+export const POST = withObservability(createVote, 'POST /api/infrastructures/[id]/vote')
