@@ -478,5 +478,81 @@ describe('/api/infrastructures/[id]/vote', () => {
         },
       })
     })
+
+    it('should return 400 error when request body is null', async () => {
+      const request = {
+        json: jest.fn().mockResolvedValue(null),
+        headers: {
+          get: jest.fn(() => null),
+        },
+      } as unknown as NextRequest
+
+      const params = Promise.resolve({ id: '123' })
+
+      const response = await POST(request, { params })
+      const data = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(data).toEqual({ error: 'Invalid request body' })
+      expect(prisma.infrastructure.findUnique).not.toHaveBeenCalled()
+      expect(prisma.vote.create).not.toHaveBeenCalled()
+    })
+
+    it('should return 400 error when request body is an array', async () => {
+      const request = {
+        json: jest.fn().mockResolvedValue(['invalid', 'array']),
+        headers: {
+          get: jest.fn(() => null),
+        },
+      } as unknown as NextRequest
+
+      const params = Promise.resolve({ id: '123' })
+
+      const response = await POST(request, { params })
+      const data = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(data).toEqual({ error: 'Invalid request body' })
+      expect(prisma.infrastructure.findUnique).not.toHaveBeenCalled()
+      expect(prisma.vote.create).not.toHaveBeenCalled()
+    })
+
+    it('should return 400 error when request body is a string', async () => {
+      const request = {
+        json: jest.fn().mockResolvedValue('invalid string'),
+        headers: {
+          get: jest.fn(() => null),
+        },
+      } as unknown as NextRequest
+
+      const params = Promise.resolve({ id: '123' })
+
+      const response = await POST(request, { params })
+      const data = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(data).toEqual({ error: 'Invalid request body' })
+      expect(prisma.infrastructure.findUnique).not.toHaveBeenCalled()
+      expect(prisma.vote.create).not.toHaveBeenCalled()
+    })
+
+    it('should return 400 error when request body is a number', async () => {
+      const request = {
+        json: jest.fn().mockResolvedValue(12345),
+        headers: {
+          get: jest.fn(() => null),
+        },
+      } as unknown as NextRequest
+
+      const params = Promise.resolve({ id: '123' })
+
+      const response = await POST(request, { params })
+      const data = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(data).toEqual({ error: 'Invalid request body' })
+      expect(prisma.infrastructure.findUnique).not.toHaveBeenCalled()
+      expect(prisma.vote.create).not.toHaveBeenCalled()
+    })
   })
 })

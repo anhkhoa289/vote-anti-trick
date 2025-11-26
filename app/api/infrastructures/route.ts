@@ -27,8 +27,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    // Validate body is an object
-    if (!body || typeof body !== 'object') {
+    // Validate body is an object (not null, not an array)
+    if (!body || typeof body !== 'object' || Array.isArray(body)) {
       return createErrorResponse({
         message: 'Invalid request body',
         status: 400
