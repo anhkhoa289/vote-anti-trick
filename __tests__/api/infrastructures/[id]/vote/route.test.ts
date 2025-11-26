@@ -370,10 +370,10 @@ describe('/api/infrastructures/[id]/vote', () => {
 
       expect(response.status).toBe(500)
       expect(data).toEqual({ error: 'Failed to create vote' })
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Error creating vote:',
-        mockError
-      )
+      expect(consoleErrorSpy).toHaveBeenCalled()
+      const errorCall = consoleErrorSpy.mock.calls[0]
+      expect(errorCall[0]).toMatch(/\[ERROR\] Error creating vote/)
+      expect(errorCall[1]).toBe('Database constraint violation')
 
       consoleErrorSpy.mockRestore()
     })
