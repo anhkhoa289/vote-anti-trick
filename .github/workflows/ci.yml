@@ -20,6 +20,10 @@ env:
   # The build process doesn't need a real database connection
   DATABASE_URL: postgresql://user:pass@localhost:5432/dbname
 
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
 
 jobs:
   test:
