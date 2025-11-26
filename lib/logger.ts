@@ -13,13 +13,10 @@ class Logger {
     const logMessage = `[${timestamp}] [${level.toUpperCase()}] ${message}`
 
     if (level === 'error') {
-      // eslint-disable-next-line no-console
       console.error(logMessage, errorDetails)
     } else if (level === 'warn') {
-      // eslint-disable-next-line no-console
       console.warn(logMessage, errorDetails)
     } else {
-      // eslint-disable-next-line no-console
       console.log(logMessage, errorDetails)
     }
   }

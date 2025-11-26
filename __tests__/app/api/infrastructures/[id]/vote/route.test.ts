@@ -467,7 +467,6 @@ describe('/api/infrastructures/[id]/vote', () => {
       const params = Promise.resolve({ id: '123' })
 
       const response = await POST(request, { params })
-      const data = await response.json()
 
       expect(response.status).toBe(201)
       expect(prisma.vote.create).toHaveBeenCalledWith({
