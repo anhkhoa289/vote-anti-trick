@@ -77,49 +77,19 @@ The following reports are generated for SonarQube analysis:
 - `sonar-project.properties` - SonarQube project configuration
 - `jest-sonar-reporter-config.json` - Test reporter configuration
 
-### Running SonarQube Analysis
+### Quick Start
 
-#### Using SonarScanner CLI
-
-1. Install SonarScanner:
-   ```bash
-   # macOS
-   brew install sonar-scanner
-
-   # Linux
-   # Download from https://docs.sonarqube.org/latest/analysis/scan/sonarscanner/
-   ```
-
-2. Update `sonar-project.properties` with your SonarQube server details:
-   ```properties
-   sonar.host.url=http://your-sonarqube-server:9000
-   sonar.login=your-token-here
-   ```
-
-3. Run tests with coverage:
+1. Run tests with coverage:
    ```bash
    yarn test:coverage
    ```
 
-4. Run SonarQube analysis:
+2. Run SonarQube analysis:
    ```bash
-   sonar-scanner
+   sonar-scanner -Dsonar.host.url=https://sonarcloud.io
    ```
 
-#### Using SonarQube with CI/CD
-
-Add to your CI/CD pipeline (e.g., GitHub Actions):
-
-```yaml
-- name: Run tests with coverage
-  run: yarn test:coverage
-
-- name: SonarQube Scan
-  uses: sonarsource/sonarqube-scan-action@master
-  env:
-    SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-    SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-```
+For detailed SonarQube setup, CI/CD integration, and troubleshooting, see **[SONARQUBE.md](./SONARQUBE.md)**.
 
 ## Test Coverage Details
 
