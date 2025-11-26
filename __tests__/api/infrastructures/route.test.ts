@@ -108,10 +108,10 @@ describe('/api/infrastructures', () => {
 
       expect(response.status).toBe(500)
       expect(data).toEqual({ error: 'Failed to fetch infrastructures' })
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Error fetching infrastructures:',
-        mockError
-      )
+      expect(consoleErrorSpy).toHaveBeenCalled()
+      const errorCall = consoleErrorSpy.mock.calls[0]
+      expect(errorCall[0]).toMatch(/\[ERROR\] Error fetching infrastructures/)
+      expect(errorCall[1]).toBe('Database connection failed')
 
       consoleErrorSpy.mockRestore()
     })
@@ -220,7 +220,7 @@ describe('/api/infrastructures', () => {
       const data = await response.json()
 
       expect(response.status).toBe(400)
-      expect(data).toEqual({ error: 'Name and description are required' })
+      expect(data).toEqual({ error: 'name is required' })
       expect(prisma.infrastructure.create).not.toHaveBeenCalled()
     })
 
@@ -237,7 +237,7 @@ describe('/api/infrastructures', () => {
       const data = await response.json()
 
       expect(response.status).toBe(400)
-      expect(data).toEqual({ error: 'Name and description are required' })
+      expect(data).toEqual({ error: 'description is required' })
       expect(prisma.infrastructure.create).not.toHaveBeenCalled()
     })
 
@@ -254,7 +254,7 @@ describe('/api/infrastructures', () => {
       const data = await response.json()
 
       expect(response.status).toBe(400)
-      expect(data).toEqual({ error: 'Name and description are required' })
+      expect(data).toEqual({ error: 'name is required' })
       expect(prisma.infrastructure.create).not.toHaveBeenCalled()
     })
 
@@ -280,10 +280,10 @@ describe('/api/infrastructures', () => {
 
       expect(response.status).toBe(500)
       expect(data).toEqual({ error: 'Failed to create infrastructure' })
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Error creating infrastructure:',
-        mockError
-      )
+      expect(consoleErrorSpy).toHaveBeenCalled()
+      const errorCall = consoleErrorSpy.mock.calls[0]
+      expect(errorCall[0]).toMatch(/\[ERROR\] Error creating infrastructure/)
+      expect(errorCall[1]).toBe('Database constraint violation')
 
       consoleErrorSpy.mockRestore()
     })
@@ -302,7 +302,7 @@ describe('/api/infrastructures', () => {
       const data = await response.json()
 
       expect(response.status).toBe(400)
-      expect(data).toEqual({ error: 'Name and description are required' })
+      expect(data).toEqual({ error: 'name is required' })
       expect(prisma.infrastructure.create).not.toHaveBeenCalled()
     })
   })

@@ -131,10 +131,10 @@ describe('/api/infrastructures/[id]', () => {
 
       expect(response.status).toBe(500)
       expect(data).toEqual({ error: 'Failed to fetch infrastructure' })
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Error fetching infrastructure:',
-        mockError
-      )
+      expect(consoleErrorSpy).toHaveBeenCalled()
+      const errorCall = consoleErrorSpy.mock.calls[0]
+      expect(errorCall[0]).toMatch(/\[ERROR\] Error fetching infrastructure/)
+      expect(errorCall[1]).toBe('Database connection failed')
 
       consoleErrorSpy.mockRestore()
     })
