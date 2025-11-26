@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Infrastructure } from '@/types'
 import InfrastructureCard from './InfrastructureCard'
 import AddInfrastructureForm from './AddInfrastructureForm'
+import { logger } from '@/lib/logger'
 
 export default function VotingPage() {
   const [infrastructures, setInfrastructures] = useState<Infrastructure[]>([])
@@ -18,7 +19,7 @@ export default function VotingPage() {
         setInfrastructures(data)
       }
     } catch (error) {
-      console.error('Error fetching infrastructures:', error)
+      logger.error('Error fetching infrastructures', error)
     } finally {
       setLoading(false)
     }
