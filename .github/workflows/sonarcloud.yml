@@ -8,6 +8,17 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+
+env:
+  # Use a dummy DATABASE_URL for build-time checks
+  # The build process doesn't need a real database connection
+  DATABASE_URL: postgresql://user:pass@localhost:5432/dbname
+
+
 jobs:
   sonarcloud:
     name: SonarCloud
@@ -17,7 +28,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Disable shallow clone for better analysis
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
