@@ -1,0 +1,422 @@
+openapi: 3.0.3
+info:
+  title: Infrastructure Voting System API
+  description: |
+    RESTful API for voting on infrastructure technologies. Users can view, create, and vote on various infrastructure technologies.
+
+    Built with Next.js 16, PostgreSQL, and Prisma ORM.
+  version: 1.0.0
+  contact:
+    name: API Support
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:3000
+    description: Development server
+  - url: https://vote-anti-trick.vercel.app
+    description: Production server
+
+tags:
+  - name: Infrastructures
+    description: Operations related to infrastructure technologies
+  - name: Votes
+    description: Operations related to voting
+
+paths:
+  /api/infrastructures:
+    get:
+      tags:
+        - Infrastructures
+      summary: List all infrastructures
+      description: Retrieve a list of all infrastructure technologies with their vote counts, ordered by newest first
+      operationId: getInfrastructures
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InfrastructureWithVotes'
+                  success:
+                    type: boolean
+                    example: true
+              examples:
+                success:
+                  summary: Successful response with infrastructures
+                  value:
+                    success: true
+                    data:
+                      - id: "clh123456789"
+                        name: "Kubernetes"
+                        description: "Container orchestration platform"
+                        imageUrl: "https://example.com/k8s.png"
+                        createdAt: "2025-01-15T10:30:00.000Z"
+                        updatedAt: "2025-01-15T10:30:00.000Z"
+                        _count:
+                          votes: 42
+                      - id: "clh987654321"
+                        name: "Docker"
+                        description: "Platform for developing, shipping, and running applications in containers"
+                        imageUrl: null
+                        createdAt: "2025-01-14T08:20:00.000Z"
+                        updatedAt: "2025-01-14T08:20:00.000Z"
+                        _count:
+                          votes: 35
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - Infrastructures
+      summary: Create a new infrastructure
+      description: Add a new infrastructure technology to the voting system
+      operationId: createInfrastructure
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInfrastructureRequest'
+            examples:
+              withImage:
+                summary: Infrastructure with image URL
+                value:
+                  name: "Terraform"
+                  description: "Infrastructure as Code tool"
+                  imageUrl: "https://example.com/terraform.png"
+              withoutImage:
+                summary: Infrastructure without image
+                value:
+                  name: "Ansible"
+                  description: "Configuration management and automation tool"
+      responses:
+        '201':
+          description: Infrastructure created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Infrastructure'
+                  success:
+                    type: boolean
+                    example: true
+              examples:
+                created:
+                  summary: Successful creation
+                  value:
+                    success: true
+                    data:
+                      id: "clh456789012"
+                      name: "Terraform"
+                      description: "Infrastructure as Code tool"
+                      imageUrl: "https://example.com/terraform.png"
+                      createdAt: "2025-01-16T12:00:00.000Z"
+                      updatedAt: "2025-01-16T12:00:00.000Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/infrastructures/{id}:
+    get:
+      tags:
+        - Infrastructures
+      summary: Get a specific infrastructure
+      description: Retrieve details of a single infrastructure technology by its ID, including vote count
+      operationId: getInfrastructureById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique identifier of the infrastructure
+          schema:
+            type: string
+            example: "clh123456789"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/InfrastructureWithVotes'
+                  success:
+                    type: boolean
+                    example: true
+              examples:
+                success:
+                  summary: Infrastructure found
+                  value:
+                    success: true
+                    data:
+                      id: "clh123456789"
+                      name: "Kubernetes"
+                      description: "Container orchestration platform"
+                      imageUrl: "https://example.com/k8s.png"
+                      createdAt: "2025-01-15T10:30:00.000Z"
+                      updatedAt: "2025-01-15T10:30:00.000Z"
+                      _count:
+                        votes: 42
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/infrastructures/{id}/vote:
+    post:
+      tags:
+        - Votes
+      summary: Vote for an infrastructure
+      description: |
+        Record a vote for a specific infrastructure technology. Optionally include voter name and email.
+        The system automatically captures the voter's IP address from request headers.
+      operationId: voteForInfrastructure
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique identifier of the infrastructure to vote for
+          schema:
+            type: string
+            example: "clh123456789"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVoteRequest'
+            examples:
+              withDetails:
+                summary: Vote with voter details
+                value:
+                  voterName: "John Doe"
+                  voterEmail: "john@example.com"
+              anonymous:
+                summary: Anonymous vote
+                value: {}
+      responses:
+        '201':
+          description: Vote recorded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      vote:
+                        $ref: '#/components/schemas/Vote'
+                      totalVotes:
+                        type: integer
+                        description: Total number of votes for this infrastructure after recording this vote
+                        example: 43
+                  success:
+                    type: boolean
+                    example: true
+              examples:
+                success:
+                  summary: Vote recorded
+                  value:
+                    success: true
+                    data:
+                      vote:
+                        id: "clh789012345"
+                        infrastructureId: "clh123456789"
+                        voterName: "John Doe"
+                        voterEmail: "john@example.com"
+                        ipAddress: "192.168.1.1"
+                        createdAt: "2025-01-16T14:30:00.000Z"
+                      totalVotes: 43
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  schemas:
+    Infrastructure:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          description: Unique identifier (CUID)
+          example: "clh123456789"
+        name:
+          type: string
+          description: Name of the infrastructure technology
+          example: "Kubernetes"
+        description:
+          type: string
+          description: Description of the infrastructure technology
+          example: "Container orchestration platform"
+        imageUrl:
+          type: string
+          nullable: true
+          description: URL to an image representing the infrastructure
+          example: "https://example.com/k8s.png"
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the infrastructure was created
+          example: "2025-01-15T10:30:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the infrastructure was last updated
+          example: "2025-01-15T10:30:00.000Z"
+
+    InfrastructureWithVotes:
+      allOf:
+        - $ref: '#/components/schemas/Infrastructure'
+        - type: object
+          properties:
+            _count:
+              type: object
+              description: Aggregated counts
+              properties:
+                votes:
+                  type: integer
+                  description: Number of votes for this infrastructure
+                  example: 42
+
+    Vote:
+      type: object
+      required:
+        - id
+        - infrastructureId
+        - createdAt
+      properties:
+        id:
+          type: string
+          description: Unique identifier (CUID)
+          example: "clh789012345"
+        infrastructureId:
+          type: string
+          description: ID of the infrastructure this vote is for
+          example: "clh123456789"
+        voterName:
+          type: string
+          nullable: true
+          description: Name of the voter (optional)
+          example: "John Doe"
+        voterEmail:
+          type: string
+          nullable: true
+          format: email
+          description: Email of the voter (optional)
+          example: "john@example.com"
+        ipAddress:
+          type: string
+          nullable: true
+          description: IP address of the voter (automatically captured)
+          example: "192.168.1.1"
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the vote was created
+          example: "2025-01-16T14:30:00.000Z"
+
+    CreateInfrastructureRequest:
+      type: object
+      required:
+        - name
+        - description
+      properties:
+        name:
+          type: string
+          description: Name of the infrastructure technology
+          minLength: 1
+          example: "Terraform"
+        description:
+          type: string
+          description: Description of the infrastructure technology
+          minLength: 1
+          example: "Infrastructure as Code tool"
+        imageUrl:
+          type: string
+          nullable: true
+          description: URL to an image representing the infrastructure (optional)
+          example: "https://example.com/terraform.png"
+
+    CreateVoteRequest:
+      type: object
+      properties:
+        voterName:
+          type: string
+          nullable: true
+          description: Name of the voter (optional)
+          example: "John Doe"
+        voterEmail:
+          type: string
+          nullable: true
+          format: email
+          description: Email of the voter (optional)
+          example: "john@example.com"
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Error message
+          example: "Failed to fetch infrastructures"
+
+  responses:
+    BadRequest:
+      description: Bad request - validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            missingFields:
+              summary: Missing required fields
+              value:
+                success: false
+                error: "Missing required fields: name, description"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            notFound:
+              summary: Infrastructure not found
+              value:
+                success: false
+                error: "Infrastructure not found"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            serverError:
+              summary: Server error
+              value:
+                success: false
+                error: "Failed to fetch infrastructures"
