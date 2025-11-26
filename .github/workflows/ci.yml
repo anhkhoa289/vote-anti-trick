@@ -10,6 +10,11 @@ on:
       - main
       - develop
 
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -20,10 +25,6 @@ env:
   # The build process doesn't need a real database connection
   DATABASE_URL: postgresql://user:pass@localhost:5432/dbname
 
-permissions:
-  contents: read
-  pull-requests: write
-  issues: write
 
 jobs:
   test:
@@ -57,62 +58,46 @@ jobs:
       - name: Run tests with coverage
         run: yarn test:coverage
 
-      - name: Upload coverage reports
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-reports
-          path: |
-            coverage/
-            test-report.xml
-          retention-days: 30
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-      - name: Comment coverage on PR
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            try {
-              const lcov = fs.readFileSync('coverage/lcov.info', 'utf8');
-              const lines = lcov.match(/LF:\d+/g);
-              const found = lcov.match(/LH:\d+/g);
+      # - name: Upload coverage reports
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: coverage-reports
+      #     path: |
+      #       coverage/
+      #       test-report.xml
+      #     retention-days: 30
 
-              if (lines && found) {
-                const total = lines.reduce((sum, line) => sum + parseInt(line.split(':')[1]), 0);
-                const covered = found.reduce((sum, line) => sum + parseInt(line.split(':')[1]), 0);
-                const percentage = ((covered / total) * 100).toFixed(2);
+      # - name: Comment coverage on PR
+      #   if: github.event_name == 'pull_request'
+      #   uses: actions/github-script@v7
+      #   with:
+      #     script: |
+      #       const fs = require('fs');
+      #       try {
+      #         const lcov = fs.readFileSync('coverage/lcov.info', 'utf8');
+      #         const lines = lcov.match(/LF:\d+/g);
+      #         const found = lcov.match(/LH:\d+/g);
 
-                github.rest.issues.createComment({
-                  issue_number: context.issue.number,
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  body: `## 📊 Test Coverage Report\n\n✅ All tests passed!\n\n**Coverage**: ${percentage}% (${covered}/${total} lines)`
-                });
-              }
-            } catch (error) {
-              console.log('Could not read coverage file:', error.message);
-            }
+      #         if (lines && found) {
+      #           const total = lines.reduce((sum, line) => sum + parseInt(line.split(':')[1]), 0);
+      #           const covered = found.reduce((sum, line) => sum + parseInt(line.split(':')[1]), 0);
+      #           const percentage = ((covered / total) * 100).toFixed(2);
 
-  build:
-    name: Build Application
-    runs-on: ubuntu-latest
-    needs: test
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-          cache: 'yarn'
-
-      - name: Install dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Generate Prisma Client
-        run: yarn prisma generate
+      #           github.rest.issues.createComment({
+      #             issue_number: context.issue.number,
+      #             owner: context.repo.owner,
+      #             repo: context.repo.repo,
+      #             body: `## 📊 Test Coverage Report\n\n✅ All tests passed!\n\n**Coverage**: ${percentage}% (${covered}/${total} lines)`
+      #           });
+      #         }
+      #       } catch (error) {
+      #         console.log('Could not read coverage file:', error.message);
+      #       }
 
       - name: Build application
         run: yarn build
