@@ -1,4 +1,5 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals'
+import { logger } from '@/lib/logger'
 
 // We need to test the actual logger, not a mock
 // So we'll spy on console methods instead
@@ -26,9 +27,6 @@ describe('logger', () => {
 
   describe('info', () => {
     it('should log info message with timestamp', () => {
-      // Import logger after setting up spies
-      const { logger } = require('@/lib/logger')
-
       logger.info('Test info message')
 
       expect(consoleLogSpy).toHaveBeenCalledTimes(1)
@@ -39,8 +37,6 @@ describe('logger', () => {
     })
 
     it('should log info message with data', () => {
-      const { logger } = require('@/lib/logger')
-
       logger.info('User action', { userId: '123', action: 'login' })
 
       expect(consoleLogSpy).toHaveBeenCalledTimes(1)
@@ -51,7 +47,6 @@ describe('logger', () => {
     })
 
     it('should log info message with string data', () => {
-      const { logger } = require('@/lib/logger')
 
       logger.info('Request received', 'GET /api/users')
 
@@ -63,7 +58,6 @@ describe('logger', () => {
     })
 
     it('should log info message with number data', () => {
-      const { logger } = require('@/lib/logger')
 
       logger.info('Processing items', 42)
 
@@ -77,7 +71,6 @@ describe('logger', () => {
 
   describe('warn', () => {
     it('should log warning message with timestamp', () => {
-      const { logger } = require('@/lib/logger')
 
       logger.warn('Test warning message')
 
@@ -89,7 +82,6 @@ describe('logger', () => {
     })
 
     it('should log warning message with data', () => {
-      const { logger } = require('@/lib/logger')
 
       logger.warn('Deprecated API usage', { endpoint: '/old-api', replacement: '/new-api' })
 
@@ -101,7 +93,6 @@ describe('logger', () => {
     })
 
     it('should log warning message with null data', () => {
-      const { logger } = require('@/lib/logger')
 
       logger.warn('Warning occurred', null)
 
@@ -115,7 +106,6 @@ describe('logger', () => {
 
   describe('error', () => {
     it('should log error message with timestamp', () => {
-      const { logger } = require('@/lib/logger')
 
       logger.error('Test error message')
 
@@ -127,7 +117,6 @@ describe('logger', () => {
     })
 
     it('should log error message with Error object', () => {
-      const { logger } = require('@/lib/logger')
 
       const error = new Error('Something went wrong')
       logger.error('Operation failed', error)
@@ -140,7 +129,6 @@ describe('logger', () => {
     })
 
     it('should log error message with custom error object', () => {
-      const { logger } = require('@/lib/logger')
 
       const customError = new TypeError('Invalid type')
       logger.error('Type validation failed', customError)
@@ -153,7 +141,6 @@ describe('logger', () => {
     })
 
     it('should log error message with string error', () => {
-      const { logger } = require('@/lib/logger')
 
       logger.error('Database error', 'Connection timeout')
 
@@ -165,7 +152,6 @@ describe('logger', () => {
     })
 
     it('should log error message with non-Error object', () => {
-      const { logger } = require('@/lib/logger')
 
       logger.error('Unexpected error', { code: 500, message: 'Internal error' })
 
@@ -177,7 +163,6 @@ describe('logger', () => {
     })
 
     it('should handle undefined error', () => {
-      const { logger } = require('@/lib/logger')
 
       logger.error('Error occurred', undefined)
 
@@ -189,7 +174,6 @@ describe('logger', () => {
     })
 
     it('should handle null error', () => {
-      const { logger } = require('@/lib/logger')
 
       logger.error('Null error', null)
 
@@ -203,7 +187,6 @@ describe('logger', () => {
 
   describe('timestamp formatting', () => {
     it('should format timestamp correctly at different times', () => {
-      const { logger } = require('@/lib/logger')
 
       // Test at a different time
       jest.setSystemTime(new Date('2024-12-31T23:59:59.999Z'))
@@ -219,7 +202,6 @@ describe('logger', () => {
 
   describe('log level formatting', () => {
     it('should format all log levels in uppercase', () => {
-      const { logger } = require('@/lib/logger')
 
       logger.info('Info message')
       logger.warn('Warn message')
@@ -242,7 +224,6 @@ describe('logger', () => {
 
   describe('multiple log calls', () => {
     it('should handle multiple consecutive logs correctly', () => {
-      const { logger } = require('@/lib/logger')
 
       logger.info('First message')
       logger.warn('Second message')

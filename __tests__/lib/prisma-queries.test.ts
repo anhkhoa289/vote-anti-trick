@@ -65,10 +65,8 @@ describe('prisma-queries', () => {
 
   describe('integration compatibility', () => {
     it('should export both constants', () => {
-      const prismaQueries = require('@/lib/prisma-queries')
-
-      expect(prismaQueries).toHaveProperty('includeVoteCount')
-      expect(prismaQueries).toHaveProperty('defaultInfrastructureOrder')
+      expect(includeVoteCount).toBeDefined()
+      expect(defaultInfrastructureOrder).toBeDefined()
     })
 
     it('should have the correct types for use in Prisma queries', () => {
